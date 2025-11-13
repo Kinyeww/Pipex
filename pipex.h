@@ -4,7 +4,8 @@
 //function name below
 // typedef struct 
 
-int		check_arg(int ac, char **av, char **envp);
+char	**check_arg(char *av);
 char	**ft_split(const char *s, char c);
+void	exepipe(char **cmd1, char **cmd2, char **envp, char **av);
 
 #endif
