@@ -6,118 +6,6 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-char	*ft_strdup(const char *s1)
-{
-	size_t	i;
-	char	*s1cpy;
-
-	i = 0;
-	while (s1[i] != '\0')
-		i++;
-	s1cpy = malloc(sizeof(char) * (i + 1));
-	if (!s1cpy)
-		return (NULL);
-	i = 0;
-	while (s1[i] != '\0')
-	{
-		s1cpy[i] = s1[i];
-		i++;
-	}
-	s1cpy[i] = '\0';
-	return (s1cpy);
-}
-
-int	check_file(char *str)
-{
-	int	fd;
-
-	fd = open(str, O_RDONLY);
-	if (fd < 1)
-		return (0);
-	return (1);
-}
-
-int	ft_strncmp(const char *s1, const char *s2, size_t n)
-{
-	size_t	i;
-
-	i = 0;
-	while (i < n && s1[i] != '\0' && s2[i] != '\0' && s1[i] == s2[i])
-		i++;
-	if (i == n)
-		return (0);
-	return ((unsigned char)s1[i] - (unsigned char)s2[i]);
-}
-
-char	*find_path(char **envp)
-{
-	int		i;
-
-	i = 0;
-	while (envp[i])
-	{
-		if (ft_strncmp(envp[i], "PATH=", 5) == 0)
-			return (ft_strdup(envp[i] + 5));
-		i++;
-	}
-	return (NULL);
-}
-
-char	*my_strjoin(char *str1, char *str2)
-{
-	char	*tmp;
-	int		i;
-	int		k;
-
-	if (!str1 || !str2)
-		return (NULL);
-	i = 0;
-	k = 0;
-	while (str1[i])
-		i++;
-	while (str2[k])
-		k++;
-	tmp = malloc(sizeof(char) * ((i + k) + 2));
-	i = 0;
-	while (str1[i])
-	{
-		tmp[i] = str1[i];
-		i++;
-	}
-	tmp[i] = '/';
-	i++;
-	k = 0;
-	while (str2[k])
-	{
-		tmp[i + k] = str2[k];
-		k++;
-	}
-	tmp[i + k] = '\0';
-	return (tmp);
-}
-
-char	*find_abs_path(char *paths, char *cmd1)
-{
-	char	*abs_path;
-	char	**splitted_path;
-	int		i;
-
-	i = 0;
-	splitted_path = ft_split(paths, ':');
-	while (splitted_path[i])
-	{
-		splitted_path[i] = my_strjoin(splitted_path[i], cmd1);
-		if (access(splitted_path[i], X_OK) == 0)
-		{
-			abs_path = splitted_path[i];
-			return (abs_path);
-		}
-		free(splitted_path[i]);
-		i++;
-	}
-	return (NULL);
-}
-
 void	first_child(char **cmd1, int pipefd[2], char **envp, char **av)
 {
 	char	*abs_path;
@@ -174,26 +62,6 @@ void	second_child(char **cmd2, int pipefd[2], char **envp, char **av)
 	perror("execve2 failed");
 }
 
-void	close_program(char **cmd1, char **cmd2)
-{
-	int	i;
-
-	i = 0;
-	while (cmd1[i])
-	{
-		free (cmd1[i]);
-		i++;
-	}
-	free (cmd1);
-	i = 0;
-	while (cmd2[i])
-	{
-		free (cmd2[i]);
-		i++;
-	}
-	free(cmd2);
-}
-
 void	exepipe(char **cmd1, char **cmd2, char **envp, char **av)
 {
 	int		pipefd[2];
@@ -224,16 +92,6 @@ void	exepipe(char **cmd1, char **cmd2, char **envp, char **av)
 	close_program(cmd1, cmd2);
 }
 
-char	**check_arg(char *av)
-{
-	char	**cmd;
-
-	cmd = ft_split(av, ' ');
-	if (!cmd)
-		return (NULL);
-	return (cmd);
-}
-
 int	main(int ac, char **av, char **envp)
 {
 	char	**cmd1;
@@ -248,8 +106,8 @@ int	main(int ac, char **av, char **envp)
 		ft_printf("Error: Empty command\n");
 		return (1);
 	}
-	cmd1 = check_arg(av[2]);
-	cmd2 = check_arg(av[3]);
+	cmd1 = assign_arg(av[2]);
+	cmd2 = assign_arg(av[3]);
 	exepipe(cmd1, cmd2, envp, av);
 	return (0);
 }
