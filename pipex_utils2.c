@@ -1,5 +1,7 @@
 #include "pipex.h"
 #include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 int	check_file(char *str)
 {
@@ -61,4 +63,10 @@ void	close_program(char **cmd1, char **cmd2)
 		i++;
 	}
 	free(cmd2);
+}
+
+void	call_first_child(char **cmd, int pipefd[2], char **envp, char **av)
+{
+	first_child(cmd, pipefd, envp, av);
+	exit(0);
 }

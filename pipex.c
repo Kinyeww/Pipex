@@ -75,10 +75,7 @@ void	exepipe(char **cmd1, char **cmd2, char **envp, char **av)
 	}
 	pid1 = fork();
 	if (pid1 == 0)
-	{
-		first_child(cmd1, pipefd, envp, av);
-		exit (0);
-	}
+		call_first_child(cmd1, pipefd, envp, av);
 	pid2 = fork();
 	if (pid2 == 0)
 	{

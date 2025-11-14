@@ -15,6 +15,10 @@ int		ft_strncmp(const char *s1, const char *s2, size_t n);
 char	*ft_strdup(const char *s1);
 int		check_file(char *str);
 char	**assign_arg(char *av);
+void	call_first_child(char **cmd, int pipefd[2], char **envp, char **av);
+char	*find_abs_path(char *paths, char *cmd1);
+void	close_program(char **cmd1, char **cmd2);
+void	first_child(char **cmd1, int pipefd[2], char **envp, char **av);
 
 
 #endif
