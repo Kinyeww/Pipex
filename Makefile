@@ -2,7 +2,7 @@ NAME = pipex
 CC = cc
 CCFLAGS = -Wall -Wextra -Wextra
 
-SRCS = pipex.c ft_printf/ft_printf_utils.c ft_printf/ft_printf.c ft_split.c pipex_utils.c pipex_utils2.c
+SRCS = pipex.c ft_printf/ft_printf_utils.c ft_printf/ft_printf.c pipex_utils.c pipex_utils2.c pipex_utils3.c pipex_utils4.c
 OBJS = $(SRCS:.c=.o)
 
 $(NAME) : $(OBJS)

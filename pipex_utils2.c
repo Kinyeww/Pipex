@@ -1,7 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pipex_utils2.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ckin-yew <ckin-yew@student.42kl.edu.my>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/15 15:23:33 by ckin-yew          #+#    #+#             */
+/*   Updated: 2025/11/15 15:54:12 by ckin-yew         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "pipex.h"
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 
 int	check_file(char *str)
 {
@@ -30,7 +43,7 @@ char	*find_abs_path(char *paths, char *cmd1)
 	int		i;
 
 	if (!paths || !cmd1)
-		return (NULL);	
+		return (NULL);
 	i = 0;
 	splitted_path = ft_split(paths, ':');
 	while (splitted_path[i])
@@ -66,4 +79,20 @@ void	close_program(t_pipex *pipex)
 			free(pipex->cmd2[i++]);
 		free(pipex->cmd2);
 	}
+}
+
+void	call_second_child(t_pipex *pipe, int pipefd[2], char **envp, char **av)
+{
+	int	outfile;
+
+	outfile = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (outfile < 0)
+	{
+		perror(av[4]);
+		close_program(pipe);
+		exit(1);
+	}
+	dup2(outfile, STDOUT_FILENO);
+	close (outfile);
+	second_child(pipe, pipefd, envp);
 }

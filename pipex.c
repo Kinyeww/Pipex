@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pipex.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ckin-yew <ckin-yew@student.42kl.edu.my>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/15 15:23:24 by ckin-yew          #+#    #+#             */
+/*   Updated: 2025/11/15 15:56:07 by ckin-yew         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "pipex.h"
 #include "ft_printf/ft_printf.h" 
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 void	first_child(t_pipex *pipex, int pipefd[2], char **envp)
 {
@@ -61,11 +73,7 @@ void	exepipe(t_pipex *pipex, char **envp, char **av)
 	int		status2;
 
 	if (pipe(pipefd) == -1)
-	{
-		perror("pipe failed");
-		close_program(pipex);
-		exit(1);
-	}
+		pipe_failed(pipex);
 	pid1 = fork();
 	if (pid1 == 0)
 		call_first_child(pipex, pipefd, envp, av);
@@ -96,22 +104,6 @@ void	call_first_child(t_pipex *pipe, int pipefd[2], char **envp, char **av)
 	dup2(infile, STDIN_FILENO);
 	close (infile);
 	first_child(pipe, pipefd, envp);
-}
-
-void	call_second_child(t_pipex *pipe, int pipefd[2], char **envp, char **av)
-{
-	int	outfile;
-
-	outfile = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (outfile < 0)
-	{
-		perror(av[4]);
-		close_program(pipe);
-		exit(1);
-	}
-	dup2(outfile, STDOUT_FILENO);
-	close (outfile);
-	second_child(pipe, pipefd, envp);
 }
 
 int	main(int ac, char **av, char **envp)

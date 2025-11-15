@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pipex.h                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ckin-yew <ckin-yew@student.42kl.edu.my>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/15 15:21:55 by ckin-yew          #+#    #+#             */
+/*   Updated: 2025/11/15 15:55:17 by ckin-yew         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef PIPEX_H
 # define PIPEX_H
 
@@ -22,8 +34,10 @@ char	**assign_arg(char *av);
 char	*find_abs_path(char *paths, char *cmd1);
 void	close_program(t_pipex *pipex);
 void	first_child(t_pipex *pipex, int pipefd[2], char **envp);
+void	second_child(t_pipex *pipex, int pipefd[2], char **envp);
 void	call_second_child(t_pipex *pipe, int pipefd[2], char **envp, char **av);
 void	call_first_child(t_pipex *pipe, int pipefd[2], char **envp, char **av);
 void	free_arr(char **str);
+void	pipe_failed(t_pipex *pipex);
 
 #endif
