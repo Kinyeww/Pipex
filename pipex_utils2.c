@@ -25,48 +25,45 @@ char	**assign_arg(char *av)
 
 char	*find_abs_path(char *paths, char *cmd1)
 {
-	char	*abs_path;
 	char	**splitted_path;
+	char	*abs_path;
 	int		i;
 
+	if (!paths || !cmd1)
+		return (NULL);	
 	i = 0;
 	splitted_path = ft_split(paths, ':');
 	while (splitted_path[i])
 	{
-		splitted_path[i] = my_strjoin(splitted_path[i], cmd1);
-		if (access(splitted_path[i], X_OK) == 0)
+		abs_path = my_strjoin(splitted_path[i], cmd1);
+		if (access(abs_path, X_OK) == 0)
 		{
-			abs_path = splitted_path[i];
+			free_arr(splitted_path);
 			return (abs_path);
 		}
-		free(splitted_path[i]);
+		free(abs_path);
 		i++;
 	}
+	free_arr(splitted_path);
 	return (NULL);
 }
 
-void	close_program(char **cmd1, char **cmd2)
+void	close_program(t_pipex *pipex)
 {
 	int	i;
 
-	i = 0;
-	while (cmd1[i])
+	if (pipex->cmd1)
 	{
-		free(cmd1[i]);
-		i++;
+		i = 0;
+		while (pipex->cmd1[i])
+			free(pipex->cmd1[i++]);
+		free (pipex->cmd1);
 	}
-	free (cmd1);
-	i = 0;
-	while (cmd2[i])
+	if (pipex->cmd2)
 	{
-		free(cmd2[i]);
-		i++;
+		i = 0;
+		while (pipex->cmd2[i])
+			free(pipex->cmd2[i++]);
+		free(pipex->cmd2);
 	}
-	free(cmd2);
-}
-
-void	call_first_child(char **cmd, int pipefd[2], char **envp, char **av)
-{
-	first_child(cmd, pipefd, envp, av);
-	exit(0);
 }

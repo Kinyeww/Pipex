@@ -81,3 +81,13 @@ char	**ft_split(const char *s, char c)
 	str[filled] = NULL;
 	return (str);
 }
+
+void	free_arr(char **str)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
+		free(str[i++]);
+	free(str);
+}

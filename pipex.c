@@ -6,105 +6,130 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-void	first_child(char **cmd1, int pipefd[2], char **envp, char **av)
+void	first_child(t_pipex *pipex, int pipefd[2], char **envp)
 {
 	char	*abs_path;
 	char	*paths;
-	int		infile;
+
+	paths = find_path(envp);
+	abs_path = find_abs_path(paths, pipex->cmd1[0]);
+	if (!abs_path)
+	{
+		close_program(pipex);
+		free(paths);
+		free(abs_path);
+		perror("invalid command 1");
+		exit(127);
+	}
+	dup2(pipefd[1], STDOUT_FILENO);
+	close(pipefd[0]);
+	close(pipefd[1]);
+	execve(abs_path, pipex->cmd1, envp);
+	perror("execve1 failed");
+	exit(1);
+}
+
+void	second_child(t_pipex *pipex, int pipefd[2], char **envp)
+{
+	char	*path;
+	char	*abs_path;
+
+	path = find_path(envp);
+	abs_path = find_abs_path(path, pipex->cmd2[0]);
+	if (!abs_path)
+	{
+		close_program(pipex);
+		free(abs_path);
+		free(path);
+		perror("invalid command 2");
+		exit(127);
+	}
+	dup2(pipefd[0], STDIN_FILENO);
+	close(pipefd[0]);
+	close(pipefd[1]);
+	execve(abs_path, pipex->cmd2, envp);
+	perror("execve2 failed");
+	exit(1);
+}
+
+void	exepipe(t_pipex *pipex, char **envp, char **av)
+{
+	int		pipefd[2];
+	int		pid1;
+	int		pid2;
+	int		status1;
+	int		status2;
+
+	if (pipe(pipefd) == -1)
+	{
+		perror("pipe failed");
+		close_program(pipex);
+		exit(1);
+	}
+	pid1 = fork();
+	if (pid1 == 0)
+		call_first_child(pipex, pipefd, envp, av);
+	pid2 = fork();
+	if (pid2 == 0)
+		call_second_child(pipex, pipefd, envp, av);
+	close(pipefd[0]);
+	close(pipefd[1]);
+	waitpid(pid1, &status1, 0);
+	waitpid(pid2, &status2, 0);
+	close_program(pipex);
+	if (WIFEXITED(status2))
+		exit(WEXITSTATUS(status2));
+	exit(1);
+}
+
+void	call_first_child(t_pipex *pipe, int pipefd[2], char **envp, char **av)
+{
+	int	infile;
 
 	infile = open(av[1], O_RDONLY);
 	if (infile < 0)
 	{
 		perror(av[1]);
+		close_program(pipe);
 		exit(1);
 	}
-	paths = find_path(envp);
-	abs_path = find_abs_path(paths, cmd1[0]);
-	if (!abs_path)
-	{
-		perror("invalid command 1");
-		return ;
-	}
 	dup2(infile, STDIN_FILENO);
-	dup2(pipefd[1], STDOUT_FILENO);
-	close(pipefd[0]);
-	close(pipefd[1]);
-	close(infile);
-	execve(abs_path, cmd1, envp);
-	perror("execve1 failed");
+	close (infile);
+	first_child(pipe, pipefd, envp);
 }
 
-void	second_child(char **cmd2, int pipefd[2], char **envp, char **av)
+void	call_second_child(t_pipex *pipe, int pipefd[2], char **envp, char **av)
 {
-	int		outfile;
-	char	*path;
-	char	*abs_path;
+	int	outfile;
 
 	outfile = open(av[4], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (outfile < 0)
 	{
-		perror("file error");
-		return ;
-	}
-	path = find_path(envp);
-	abs_path = find_abs_path(path, cmd2[0]);
-	if (!abs_path)
-	{
-		perror("invalid command 2");
-		return ;
-	}
-	dup2(outfile, STDOUT_FILENO);
-	dup2(pipefd[0], STDIN_FILENO);
-	close(pipefd[0]);
-	close(pipefd[1]);
-	close(outfile);
-	execve(abs_path, cmd2, envp);
-	perror("execve2 failed");
-}
-
-void	exepipe(char **cmd1, char **cmd2, char **envp, char **av)
-{
-	int		pipefd[2];
-	int		pid1;
-	int		pid2;
-
-	if (pipe(pipefd) == -1)
-	{
-		perror("pipe failed");
+		perror(av[4]);
+		close_program(pipe);
 		exit(1);
 	}
-	pid1 = fork();
-	if (pid1 == 0)
-		call_first_child(cmd1, pipefd, envp, av);
-	pid2 = fork();
-	if (pid2 == 0)
-	{
-		second_child(cmd2, pipefd, envp, av);
-		exit (0);
-	}
-	close(pipefd[0]);
-	close(pipefd[1]);
-	waitpid(pid1, NULL, 0);
-	waitpid(pid2, NULL, 0);
-	close_program(cmd1, cmd2);
+	dup2(outfile, STDOUT_FILENO);
+	close (outfile);
+	second_child(pipe, pipefd, envp);
 }
 
 int	main(int ac, char **av, char **envp)
 {
-	char	**cmd1;
-	char	**cmd2;
+	t_pipex	pipex;
 
 	if (ac != 5)
 	{
 		ft_printf("Error\nUsage: ./pipex infile cmd1 cmd2 outfile\n");
+		return (1);
 	}
 	if (!av[2][0] || !av[3][0])
 	{
 		ft_printf("Error: Empty command\n");
 		return (1);
 	}
-	cmd1 = assign_arg(av[2]);
-	cmd2 = assign_arg(av[3]);
-	exepipe(cmd1, cmd2, envp, av);
+	pipex.cmd1 = assign_arg(av[2]);
+	pipex.cmd2 = assign_arg(av[3]);
+	exepipe(&pipex, envp, av);
 	return (0);
 }
